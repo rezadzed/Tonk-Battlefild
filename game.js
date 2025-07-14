@@ -1,12 +1,18 @@
-// --- مقداردهی اولیه تلگرام وب اپ ---
 const tg = window.Telegram.WebApp;
-tg.ready(); // به تلگرام اطلاع می‌دهیم که وب اپ آماده است
+tg.ready();
 
-// --- صحنه منوی اصلی ---
+// --- تابع برای مدیریت رویداد کلیک دکمه اصلی تلگرام ---
+// این تابع کمک می‌کند تا از ثبت چندباره رویداد جلوگیری شود
+function setMainButtonAction(text, callback) {
+    tg.MainButton.offClick(this._mainButtonCallback); // پاک کردن رویداد قبلی
+    this._mainButtonCallback = callback; // ذخیره رویداد جدید
+    tg.MainButton.setText(text);
+    tg.MainButton.onClick(this._mainButtonCallback);
+    tg.MainButton.show();
+}
+
 class MainMenuScene extends Phaser.Scene {
-    constructor() {
-        super('MainMenuScene');
-    }
+    constructor() { super('MainMenuScene'); }
 
     create() {
         document.getElementById('controls').classList.add('hidden');
@@ -14,40 +20,34 @@ class MainMenuScene extends Phaser.Scene {
         
         const centerX = this.scale.width / 2;
         const centerY = this.scale.height / 2;
-
         const user = tg.initDataUnsafe?.user;
         const userName = user ? user.first_name : 'بازیکن';
 
-        this.add.text(centerX, centerY - 150, `خوش آمدی، ${userName}!`, {
-            font: '32px Vazirmatn', fill: `#${tg.themeParams.text_color || 'ffffff'}`
-        }).setOrigin(0.5);
+        this.add.text(centerX, centerY - 150, `خوش آمدی، ${userName}!`, { font: '32px Vazirmatn', fill: `#${tg.themeParams.text_color || 'ffffff'}` }).setOrigin(0.5);
+        this.add.text(centerX, centerY - 50, 'Tonk Battlefield', { font: '48px Vazirmatn', fill: `#${tg.themeParams.text_color || 'ffffff'}` }).setOrigin(0.5);
 
-        this.add.text(centerX, centerY - 50, 'Tonk Battlefield', {
-            font: '48px Vazirmatn', fill: `#${tg.themeParams.text_color || 'ffffff'}`
-        }).setOrigin(0.5);
-
-        // --- تنظیم دکمه اصلی تلگرام ---
-        tg.MainButton.setText("شروع بازی");
-        tg.MainButton.onClick(() => {
-            if (Tone.context.state !== 'running') Tone.start();
+        // استفاده از تابع جدید برای تنظیم دکمه
+        setMainButtonAction("شروع بازی", () => {
+            try {
+                if (Tone.context.state !== 'running') Tone.start();
+            } catch (e) {
+                console.error("Tone.js start failed:", e);
+            }
             this.scene.start('GameScene');
         });
-        tg.MainButton.show();
     }
 }
 
-// --- کلاس گلوله ---
 class Bullet extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) { super(scene, x, y, 'bullet'); scene.add.existing(this); scene.physics.add.existing(this); this.setScale(0.5).body.setCircle(8); }
     fire(x, y, angle) { this.setPosition(x, y).setRotation(angle).setActive(true).setVisible(true); this.scene.physics.velocityFromRotation(angle, 600, this.velocity); this.scene.time.addEvent({ delay: 3000, callback: () => this.active && this.destroy() }); }
 }
 
-// --- صحنه اصلی بازی ---
 class GameScene extends Phaser.Scene {
     constructor() { super('GameScene'); }
 
     create() {
-        tg.MainButton.hide(); // مخفی کردن دکمه اصلی در حین بازی
+        tg.MainButton.hide();
         document.getElementById('controls').classList.remove('hidden');
 
         this.shootSound = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.1, release: 0.1 } }).toDestination();
@@ -81,7 +81,6 @@ class GameScene extends Phaser.Scene {
     makeGraphics() { const createTexture = (name, drawCallback, width, height) => { let gfx = this.make.graphics({ add: false }); drawCallback(gfx); gfx.generateTexture(name, width, height); gfx.destroy(); }; createTexture('tank', gfx => { gfx.fillStyle(0x336633, 1).fillRect(0, 0, 50, 40); gfx.fillStyle(0x555555, 1).fillRect(50, 15, 30, 10); }, 80, 40); createTexture('bullet', gfx => gfx.fillStyle(0xffcc00, 1).fillCircle(8, 8, 8), 16, 16); createTexture('wall', gfx => gfx.fillStyle(0x795548, 1).fillRect(0, 0, 100, 20), 100, 20); }
 }
 
-// --- صحنه پایان بازی ---
 class GameOverScene extends Phaser.Scene {
     constructor() { super('GameOverScene'); }
     
@@ -93,14 +92,13 @@ class GameOverScene extends Phaser.Scene {
 
         this.add.text(centerX, centerY - 100, 'بازی تمام شد', { font: '48px Vazirmatn', fill: '#ffffff' }).setOrigin(0.5);
 
-        // --- تنظیم دکمه اصلی تلگرام برای شروع مجدد ---
-        tg.MainButton.setText("شروع مجدد");
-        tg.MainButton.onClick(() => this.scene.start('GameScene'));
-        tg.MainButton.show();
+        // استفاده از تابع جدید برای تنظیم دکمه
+        setMainButtonAction("شروع مجدد", () => {
+            this.scene.start('GameScene');
+        });
     }
 }
 
-// --- تنظیمات و اجرای بازی ---
 window.addEventListener('load', () => {
     const config = { type: Phaser.AUTO, scale: { mode: Phaser.Scale.RESIZE, parent: 'game-container', width: window.innerWidth, height: window.innerHeight }, physics: { default: 'arcade', arcade: { gravity: { y: 0 } } }, scene: [MainMenuScene, GameScene, GameOverScene] };
     new Phaser.Game(config);
