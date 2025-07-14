@@ -1,0 +1,56 @@
+/* استایل‌های اصلی صفحه */
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* جلوگیری از اسکرول */
+    /* *** استفاده از رنگ پس‌زمینه تم تلگرام کاربر *** */
+    background-color: var(--tg-theme-bg-color, #1a1a1a);
+    color: var(--tg-theme-text-color, white);
+    font-family: 'Vazirmatn', sans-serif; /* فونت فارسی مناسب */
+}
+
+/* استایل برای اینکه بازی تمام صفحه را بگیرد */
+#game-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* استایل دکمه‌های کنترل */
+.control-btn {
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 2px solid var(--tg-theme-button-color, rgba(255, 255, 255, 0.4));
+    color: var(--tg-theme-button-text-color, white);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    user-select: none; /* جلوگیری از انتخاب متن دکمه */
+    -webkit-user-select: none;
+    cursor: pointer;
+}
+
+.control-btn:active {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* کلاس برای پنهان کردن کنترل‌ها در منوها */
+.hidden {
+    display: none;
+}
+
+/* فونت وزیر برای استفاده در استایل */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
