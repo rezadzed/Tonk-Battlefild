@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Tonk Battlefield</title>
+    
+    <!-- *** اسکریپت تلگرام وب اپ (بسیار مهم) *** -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- کتابخانه‌های خارجی بازی -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
+    
+    <!-- لینک به فایل استایل -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- محفظه اصلی که بازی در آن اجرا می‌شود -->
+    <div id="game-container"></div>
+
+    <!-- کنترل‌های روی صفحه (برای موبایل) که در ابتدا مخفی هستند -->
+    <div id="controls" class="hidden">
+        <div class="fixed bottom-8 left-8 z-10">
+            <div class="grid grid-cols-3 gap-2 w-48">
+                <div></div>
+                <div id="btn-up" class="control-btn">▲</div>
+                <div></div>
+                <div id="btn-left" class="control-btn">◀</div>
+                <div></div>
+                <div id="btn-right" class="control-btn">▶</div>
+                <div></div>
+                <div id="btn-down" class="control-btn">▼</div>
+                <div></div>
+            </div>
+        </div>
+        <div class="fixed bottom-8 right-8 z-10">
+            <div id="btn-fire" class="control-btn w-20 h-20 text-4xl">🔥</div>
+        </div>
+    </div>
+    
+    <!-- لینک به فایل جاوااسکریپت بازی -->
+    <script src="game.js"></script>
+</body>
+</html>
