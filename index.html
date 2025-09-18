@@ -8,31 +8,778 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Tonk Battlefield</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>نبرد تانک ها</title>
     
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelpivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
+    <!-- Import Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Import Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Import Phaser.js for the game engine -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
     
-    <link rel="stylesheet" href="style.css">
+    <!-- Import Tone.js for audio effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+
+    <style>
+        /* Custom styles */
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            overflow: hidden;
+            touch-action: none; /* Disable pinch zoom */
+        }
+        #game-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background-image: url('https://www.transparenttextures.com/patterns/cracks.png');
+            background-color: #4a4a4a; /* Fallback color */
+        }
+        .hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            color: white;
+            text-shadow: 2px 2px 4px #000;
+            pointer-events: none;
+        }
+        .team-score {
+            padding: 5px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .blue-team {
+            background-color: rgba(59, 130, 246, 0.7);
+        }
+        .red-team {
+            background-color: rgba(239, 68, 68, 0.7);
+        }
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            pointer-events: none; /* Parent container doesn't block game clicks */
+        }
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 2px solid #888;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            user-select: none;
+            pointer-events: auto; /* Buttons are interactive */
+            transition: background-color 0.2s;
+        }
+        .control-btn:active {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        .d-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            grid-template-rows: repeat(3, 60px);
+            gap: 5px;
+        }
+        #up-btn { grid-column: 2; grid-row: 1; }
+        #left-btn { grid-column: 1; grid-row: 2; }
+        #right-btn { grid-column: 3; grid-row: 2; }
+        #down-btn { grid-column: 2; grid-row: 3; }
+
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: #2d2d2d;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .modal-header {
+            padding-bottom: 10px;
+            border-bottom: 1px solid #555;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fca5a5; /* Red accent */
+        }
+        .modal-body {
+            padding-top: 15px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .close-btn {
+            color: #aaa;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .shop-item, .leaderboard-item {
+            background-color: #3a3a3a;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .buy-btn {
+            background-color: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .buy-btn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .buy-btn:hover:not(:disabled) {
+            background-color: #2563eb;
+        }
+        .buy-btn-ton {
+            background-color: #0098EA;
+        }
+         .buy-btn-ton:hover:not(:disabled) {
+            background-color: #0078be;
+        }
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
-    <div id="game-container"></div>
 
-    <div id="controls" class="hidden">
-        <div class="fixed bottom-8 left-8 z-10">
-            <div class="grid grid-cols-3 gap-2 w-48">
-                <div></div><div id="btn-up" class="control-btn">▲</div><div></div>
-                <div id="btn-left" class="control-btn">◀</div><div></div><div id="btn-right" class="control-btn">▶</div>
-                <div></div><div id="btn-down" class="control-btn">▼</div><div></div>
-            </div>
-        </div>
-        <div class="fixed bottom-8 right-8 z-10">
-            <div id="btn-fire" class="control-btn w-20 h-20 text-4xl">🔥</div>
-        </div>
+    <div id="game-container">
+        <!-- Phaser game canvas will be injected here -->
+    </div>
+
+    <!-- Game UI -->
+    <div class="hud" style="visibility: hidden;">
+        <div id="blue-score" class="team-score blue-team">تیم آبی: 0</div>
+        <div id="red-score" class="team-score red-team">تیم قرمز: 0</div>
     </div>
     
-    <script src="game.js"></script>
+    <div class="controls" style="visibility: hidden;">
+        <div class="d-pad">
+            <button id="up-btn" class="control-btn">▲</button>
+            <button id="left-btn" class="control-btn">◀</button>
+            <button id="right-btn" class="control-btn">▶</button>
+            <button id="down-btn" class="control-btn">▼</button>
+        </div>
+        <button id="fire-btn" class="control-btn" style="width: 80px; height: 80px;">💥</button>
+    </div>
+
+    <!-- Menu Buttons -->
+    <div id="menu-buttons" style="position: absolute; top: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; visibility: hidden;">
+        <button id="shop-btn" class="buy-btn">🛒 فروشگاه</button>
+        <button id="leaderboard-btn" class="buy-btn">🏆 جدول رده‌بندی</button>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast"></div>
+
+    <!-- Shop Modal -->
+    <div id="shop-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close-btn" data-modal="shop-modal">&times;</span>
+                فروشگاه
+            </div>
+            <div class="modal-body">
+                <h3 class="text-xl font-bold mb-4 text-amber-300">ارتقای قدرت تانک</h3>
+                <div class="shop-item">
+                    <div>
+                        <p class="font-bold">سطح ۱ قدرت</p>
+                        <p class="text-sm text-gray-400">قدرت شلیک را افزایش می‌دهد.</p>
+                    </div>
+                    <button class="buy-btn buy-btn-ton" onclick="purchase('power', 1, 1.0)">خرید (1 TON)</button>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <p class="font-bold">سطح ۲ قدرت</p>
+                        <p class="text-sm text-gray-400">قدرت شلیک را به میزان قابل توجهی افزایش می‌دهد.</p>
+                    </div>
+                    <button class="buy-btn buy-btn-ton" onclick="purchase('power', 2, 3.0)">خرید (3 TON)</button>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <p class="font-bold">سطح ۳ قدرت (نهایی)</p>
+                        <p class="text-sm text-gray-400">قدرت تخریب نهایی! ۴ برابر قدرت اولیه.</p>
+                    </div>
+                    <button class="buy-btn buy-btn-ton" onclick="purchase('power', 3, 10.0)">خرید (10 TON)</button>
+                </div>
+
+                <h3 class="text-xl font-bold my-4 text-amber-300">تغییرات ظاهری</h3>
+                <div class="shop-item">
+                    <p class="font-bold">پوسته چریکی</p>
+                    <button class="buy-btn buy-btn-ton" onclick="purchase('skin', 'camo', 0.5)">خرید (0.5 TON)</button>
+                </div>
+                <div class="shop-item">
+                    <p class="font-bold">پوسته طلایی</p>
+                    <button class="buy-btn buy-btn-ton" onclick="purchase('skin', 'gold', 0.5)">خرید (0.5 TON)</button>
+                </div>
+                <div class="shop-item">
+                    <p class="font-bold">پوسته آتشین</p>
+                    <button class="buy-btn buy-btn-ton" onclick="purchase('skin', 'fire', 0.5)">خرید (0.5 TON)</button>
+                </div>
+
+                <h3 class="text-xl font-bold my-4 text-amber-300">خرید تانک جدید</h3>
+                <div class="shop-item">
+                    <p class="font-bold">تانک سریع (Scout)</p>
+                    <button class="buy-btn buy-btn-ton" onclick="purchase('tank', 'scout', 5.0)">خرید (5 TON)</button>
+                </div>
+                <div class="shop-item">
+                    <p class="font-bold">تانک سنگین (Juggernaut)</p>
+                    <button class="buy-btn buy-btn-ton" onclick="purchase('tank', 'juggernaut', 20.0)">خرید (20 TON)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close-btn" data-modal="leaderboard-modal">&times;</span>
+                جدول رده‌بندی
+            </div>
+            <div id="leaderboard-body" class="modal-body">
+                <!-- Leaderboard items will be injected here -->
+                <p>در حال بارگذاری اطلاعات...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome Modal -->
+    <div id="welcome-modal" class="modal" style="display: flex;">
+        <div class="modal-content text-center">
+            <h2 class="text-2xl font-bold mb-4">به نبرد تانک‌ها خوش آمدید!</h2>
+            <p class="mb-2">وضعیت اتصال:</p>
+            <p id="user-id-display" class="mb-4 bg-gray-800 p-2 rounded-lg break-all">در حال اتصال به سرور...</p>
+            <p class="mb-6">از دکمه‌های روی صفحه برای حرکت و شلیک استفاده کنید. تیم حریف را نابود کنید!</p>
+            <button id="start-game-btn" class="buy-btn text-xl p-4" disabled>لطفاً منتظر بمانید...</button>
+        </div>
+    </div>
+
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, getDocs, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Globals (Provided by Canvas Environment) ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // --- Firebase Instances ---
+        let app, auth, db;
+
+        // --- Global Variables ---
+        let game;
+        let currentGameId = null;
+        let currentPlayerId = null;
+        let playerTeam = null;
+        let unsubscribeGameListener = null;
+        const TON_WALLET_ADDRESS = "UQB26SX8qZT9F64lBld5J1QRncdeKwxhVVFDHdkI7dJvvuiF";
+
+        // --- UI Elements ---
+        const shopModal = document.getElementById('shop-modal');
+        const leaderboardModal = document.getElementById('leaderboard-modal');
+        const welcomeModal = document.getElementById('welcome-modal');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const userIdDisplay = document.getElementById('user-id-display');
+
+        // --- Toast Notification ---
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // --- Modal Logic ---
+        document.querySelectorAll('.close-btn').forEach(btn => {
+            btn.onclick = () => document.getElementById(btn.dataset.modal).style.display = 'none';
+        });
+        document.getElementById('shop-btn').onclick = () => shopModal.style.display = 'block';
+        document.getElementById('leaderboard-btn').onclick = () => {
+            leaderboardModal.style.display = 'block';
+            loadLeaderboard();
+        };
+        window.onclick = (event) => {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        };
+        
+        // --- TON Payment Logic ---
+        window.purchase = function(itemType, itemId, amount) {
+            console.log(`Attempting purchase: ${itemType} ${itemId} for ${amount} TON`);
+            showToast(`برای تکمیل خرید، تراکنش را در Tonkeeper تایید کنید.`);
+            const deepLink = `ton://transfer/${TON_WALLET_ADDRESS}?amount=${amount * 1e9}&text=purchase_${itemType}_${itemId}`;
+            console.log("Generated TON Deep Link:", deepLink);
+            // window.open(deepLink); // In a real app, this would open the wallet
+            setTimeout(() => {
+                showToast(`خرید ${itemId} موفقیت آمیز بود! (شبیه‌سازی)`);
+            }, 2000);
+        }
+
+        // --- Leaderboard Logic ---
+        async function loadLeaderboard() {
+            const leaderboardBody = document.getElementById('leaderboard-body');
+            leaderboardBody.innerHTML = '<p>در حال بارگذاری اطلاعات...</p>';
+            try {
+                const q = query(collection(db, "artifacts", appId, "public", "data", "users"));
+                const querySnapshot = await getDocs(q);
+                let users = [];
+                querySnapshot.forEach((doc) => users.push({ id: doc.id, ...doc.data() }));
+                users.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+                if (users.length === 0) {
+                    leaderboardBody.innerHTML = '<p>هنوز کسی در جدول رده‌بندی نیست.</p>';
+                    return;
+                }
+                
+                leaderboardBody.innerHTML = ''; // Clear loading message
+                users.slice(0, 10).forEach((user, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'leaderboard-item';
+                    item.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <span class="font-bold text-lg">${index + 1}.</span>
+                            <p class="truncate max-w-[200px]">${user.id}</p>
+                        </div>
+                        <p class="font-bold text-amber-300">${user.score || 0} امتیاز</p>
+                    `;
+                    leaderboardBody.appendChild(item);
+                });
+            } catch (error) {
+                console.error("Error loading leaderboard: ", error);
+                leaderboardBody.innerHTML = `<p>خطا در بارگذاری اطلاعات: ${error.message}</p>`;
+            }
+        }
+        
+        // --- Authentication & Game Start ---
+        function setupAuthListener() {
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    if (currentPlayerId) return; // Already handled
+                    currentPlayerId = user.uid;
+                    console.log("Authenticated User ID:", currentPlayerId);
+                    
+                    const userDocRef = doc(db, "artifacts", appId, "public", "data", "users", currentPlayerId);
+                    try {
+                        const userDoc = await getDoc(userDocRef);
+                        if (!userDoc.exists()) {
+                            await setDoc(userDocRef, { score: 0, items: {}, createdAt: serverTimestamp() });
+                        }
+                        userIdDisplay.textContent = `شناسه شما: ${currentPlayerId}`;
+                        userIdDisplay.classList.remove('text-red-400');
+                        startGameBtn.disabled = false;
+                        startGameBtn.textContent = "شروع بازی";
+                    } catch (error) {
+                         console.error("Error setting up user document:", error);
+                         userIdDisplay.textContent = `خطا در دسترسی به دیتابیس: ${error.message}`;
+                         userIdDisplay.classList.add('text-red-400');
+                         startGameBtn.disabled = true;
+                    }
+                } else {
+                    currentPlayerId = null;
+                    userIdDisplay.textContent = "قطع اتصال.";
+                    startGameBtn.disabled = true;
+                    startGameBtn.textContent = "در حال اتصال...";
+                }
+            });
+        }
+
+        async function signInUser() {
+            try {
+                if (initialAuthToken) {
+                    console.log("Attempting sign-in with custom token...");
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    console.log("No custom token found. Attempting anonymous sign-in...");
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Sign-in failed:", error);
+                throw new Error(`Firebase sign-in failed: ${error.message}`);
+            }
+        }
+        
+        startGameBtn.onclick = () => {
+            welcomeModal.style.display = 'none';
+            document.querySelector('.hud').style.visibility = 'visible';
+            document.querySelector('.controls').style.visibility = 'visible';
+            document.getElementById('menu-buttons').style.visibility = 'visible';
+            findOrCreateGame();
+        };
+
+        // --- Matchmaking Logic ---
+        async function findOrCreateGame() {
+            if (!currentPlayerId) {
+                showToast("خطا: کاربر احراز هویت نشده است.");
+                return;
+            }
+            showToast("در جستجوی بازی...");
+            const gameRef = doc(db, "artifacts", appId, "public", "data", "gameFinder", "activeGame");
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const gameFinderDoc = await transaction.get(gameRef);
+                    const now = Date.now();
+                    // If game is old (e.g., > 60s), create a new one
+                    if (!gameFinderDoc.exists() || gameFinderDoc.data().playerCount >= 6 || (gameFinderDoc.data().createdAt && now - gameFinderDoc.data().createdAt.toMillis() > 60000)) {
+                        const newGameId = `game_${now}`;
+                        transaction.set(gameRef, { gameId: newGameId, playerCount: 1, createdAt: serverTimestamp() });
+                        currentGameId = newGameId;
+                        playerTeam = 'blue';
+                    } else {
+                        const data = gameFinderDoc.data();
+                        currentGameId = data.gameId;
+                        const newPlayerCount = data.playerCount + 1;
+                        transaction.update(gameRef, { playerCount: newPlayerCount });
+                        playerTeam = newPlayerCount % 2 === 0 ? 'red' : 'blue';
+                    }
+                });
+
+                console.log(`Joined game ${currentGameId} as team ${playerTeam}`);
+                showToast(`به تیم ${playerTeam === 'blue' ? 'آبی' : 'قرمز'} پیوستید!`);
+                joinGameSession();
+            } catch (error) {
+                console.error("Transaction failed: ", error);
+                showToast(`خطا در اتصال به بازی: ${error.message}`);
+            }
+        }
+
+        function joinGameSession() {
+            const gameConfig = {
+                type: Phaser.AUTO,
+                width: window.innerWidth,
+                height: window.innerHeight,
+                parent: 'game-container',
+                physics: { default: 'arcade', arcade: { debug: false, gravity: { y: 0 } } },
+                scene: [GameScene],
+                scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH }
+            };
+            game = new Phaser.Game(gameConfig);
+        }
+        
+        // --- Phaser Game Scene ---
+        class GameScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'GameScene' });
+                this.otherPlayers = {};
+                this.lastUpdateTime = 0;
+            }
+
+            preload() {
+                this.load.image('tank_blue', 'https://placehold.co/50x70/3b82f6/ffffff?text=T');
+                this.load.image('tank_red', 'https://placehold.co/50x70/ef4444/ffffff?text=T');
+                this.load.image('bullet', 'https://placehold.co/10x10/f59e0b/ffffff?text=o');
+                this.load.image('obstacle', 'https://placehold.co/80x80/964B00/ffffff?text= سنگ');
+                this.load.image('explosion', 'https://placehold.co/64x64/ff0000/ffffff?text=💥');
+            }
+
+            create() {
+                this.cameras.main.setBackgroundColor('#4a4a4a');
+                this.physics.world.setBounds(0, 0, 1600, 1200);
+
+                // FIX: Correctly call staticGroup()
+                this.obstacles = this.physics.add.staticGroup();
+                for (let i = 0; i < 10; i++) {
+                    const x = Phaser.Math.Between(100, 1500);
+                    const y = Phaser.Math.Between(100, 1100);
+                    this.obstacles.create(x, y, 'obstacle').setScale(Phaser.Math.FloatBetween(0.5, 1.2)).refreshBody();
+                }
+
+                const startPos = { x: playerTeam === 'blue' ? 100 : 1500, y: Phaser.Math.Between(100, 1100) };
+                this.player = this.physics.add.sprite(startPos.x, startPos.y, playerTeam === 'blue' ? 'tank_blue' : 'tank_red');
+                this.player.setCollideWorldBounds(true).setDamping(true).setDrag(0.98).setMaxVelocity(200);
+                this.player.setData({id: currentPlayerId, health: 100, team: playerTeam});
+
+                this.cameras.main.startFollow(this.player, true, 0.08, 0.08).setBounds(0, 0, 1600, 1200);
+
+                this.bullets = this.physics.add.group({ defaultKey: 'bullet', maxSize: 30, runChildUpdate: true });
+
+                this.physics.add.collider(this.player, this.obstacles);
+                this.physics.add.collider(this.bullets, this.obstacles, (bullet) => bullet.destroy());
+                this.physics.add.collider(this.bullets, this.player, this.handleBulletCollision, null, this);
+                
+                this.setupControls();
+                
+                this.synth = new Tone.Synth().toDestination();
+                this.explosionSound = new Tone.MembraneSynth().toDestination();
+
+                this.listenForGameUpdates();
+            }
+
+            update(time, delta) {
+                if (!this.player || !this.player.active) return;
+                this.handleInput();
+                if (time > this.lastUpdateTime + 100) {
+                    this.updatePlayerStateInFirestore();
+                    this.lastUpdateTime = time;
+                }
+            }
+
+            setupControls() {
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.moveState = { up: false, down: false, left: false, right: false };
+                const setupBtn = (id, dir) => {
+                    const btn = document.getElementById(id);
+                    btn.addEventListener('touchstart', (e) => { e.preventDefault(); this.moveState[dir] = true; }, { passive: false });
+                    btn.addEventListener('touchend', (e) => { e.preventDefault(); this.moveState[dir] = false; }, { passive: false });
+                    btn.addEventListener('mousedown', () => this.moveState[dir] = true);
+                    btn.addEventListener('mouseup', () => this.moveState[dir] = false);
+                    btn.addEventListener('mouseleave', () => this.moveState[dir] = false);
+                };
+                ['up', 'down', 'left', 'right'].forEach(dir => setupBtn(`${dir}-btn`, dir));
+                
+                const fireBtn = document.getElementById('fire-btn');
+                fireBtn.addEventListener('touchstart', (e) => { e.preventDefault(); this.fireBullet(); }, { passive: false });
+                fireBtn.addEventListener('mousedown', () => this.fireBullet());
+            }
+
+            handleInput() {
+                if (this.cursors.left.isDown || this.moveState.left) this.player.setAngularVelocity(-150);
+                else if (this.cursors.right.isDown || this.moveState.right) this.player.setAngularVelocity(150);
+                else this.player.setAngularVelocity(0);
+
+                if (this.cursors.up.isDown || this.moveState.up) this.physics.velocityFromRotation(this.player.rotation - Math.PI/2, 400, this.player.body.acceleration);
+                else if (this.cursors.down.isDown || this.moveState.down) this.physics.velocityFromRotation(this.player.rotation - Math.PI/2, -200, this.player.body.acceleration);
+                else this.player.setAcceleration(0);
+
+                if (Phaser.Input.Keyboard.JustDown(this.cursors.space)) this.fireBullet();
+            }
+            
+            fireBullet() {
+                if (!this.player.active) return;
+                const bullet = this.bullets.get(this.player.x, this.player.y);
+                if (bullet) {
+                    bullet.setActive(true).setVisible(true).setData({ownerId: currentPlayerId, team: playerTeam});
+                    this.physics.velocityFromRotation(this.player.rotation - Math.PI / 2, 600, bullet.body.velocity);
+                    this.synth.triggerAttackRelease("C2", "8n");
+                    setDoc(doc(db, "artifacts", appId, "public", "data", "games", currentGameId, "bullets", `bullet_${Date.now()}`), { x: bullet.x, y: bullet.y, rotation: this.player.rotation, ownerId: currentPlayerId, team: playerTeam });
+                    // FIX: Add safety check for bullet destruction
+                    this.time.delayedCall(2000, () => { if(bullet) bullet.destroy() });
+                }
+            }
+
+            handleBulletCollision(target, bullet) {
+                if (target.getData('team') === bullet.getData('team')) return;
+                
+                const bulletOwnerId = bullet.getData('ownerId');
+                bullet.destroy();
+                
+                let health = target.getData('health') - 10;
+                target.setData('health', health);
+                
+                this.explosionSound.triggerAttackRelease("G1", "8n");
+                
+                if (health <= 0) {
+                    this.killPlayer(target, bulletOwnerId)
+                } else {
+                    // FIX: Cleaner way to handle tinting
+                    target.setTint(0xff0000);
+                    this.time.delayedCall(100, () => {
+                        if (target.scene) { // Check if target hasn't been destroyed
+                           target.clearTint();
+                        }
+                    });
+                }
+                
+                setDoc(doc(db, "artifacts", appId, "public", "data", "games", currentGameId, "players", target.getData('id')), { health: health, lastHitBy: bulletOwnerId }, { merge: true });
+            }
+            
+            killPlayer(player, killerId) {
+                if (!player.active) return;
+                player.setActive(false).setVisible(false);
+                
+                // FIX: Cleaner way to create and destroy explosion
+                const explosion = this.add.sprite(player.x, player.y, 'explosion').setScale(2);
+                this.time.delayedCall(500, () => explosion.destroy());
+
+                if (killerId && killerId !== player.getData('id')) {
+                    const killerDocRef = doc(db, "artifacts", appId, "public", "data", "users", killerId);
+                    // FIX: Corrected transaction logic
+                    runTransaction(db, async t => {
+                        const killerDoc = await t.get(killerDocRef);
+                        const newScore = (killerDoc.data()?.score || 0) + 1;
+                        t.update(killerDocRef, { score: newScore });
+                    });
+                }
+                
+                if (player.getData('id') === currentPlayerId) {
+                    showToast("شما نابود شدید! تا 5 ثانیه دیگر بازمی‌گردید.");
+                    this.time.delayedCall(5000, this.respawnPlayer, [], this);
+                }
+            }
+            
+            respawnPlayer() {
+                const startPos = { x: playerTeam === 'blue' ? 100 : 1500, y: Phaser.Math.Between(100, 1100) };
+                this.player.setPosition(startPos.x, startPos.y).setData('health', 100).setActive(true).setVisible(true);
+                this.updatePlayerStateInFirestore();
+                showToast("شما به بازی بازگشتید!");
+            }
+
+            listenForGameUpdates() {
+                const playersRef = collection(db, "artifacts", appId, "public", "data", "games", currentGameId, "players");
+                unsubscribeGameListener = onSnapshot(playersRef, (snapshot) => {
+                    let teamCounts = { blue: 0, red: 0 };
+                    const activePlayerIds = new Set(snapshot.docs.map(d => d.id));
+
+                    snapshot.docChanges().forEach((change) => {
+                        const playerData = change.doc.data();
+                        const playerId = change.doc.id;
+                        if (playerId === currentPlayerId) return;
+
+                        if (change.type === "added" || change.type === "modified") {
+                            if (!this.otherPlayers[playerId]) {
+                                const tankSpriteKey = playerData.team === 'blue' ? 'tank_blue' : 'tank_red';
+                                this.otherPlayers[playerId] = this.physics.add.sprite(playerData.x, playerData.y, tankSpriteKey);
+                                this.otherPlayers[playerId].setData({id: playerId, team: playerData.team});
+                                this.physics.add.collider(this.bullets, this.otherPlayers[playerId], this.handleBulletCollision, null, this);
+                            }
+                            const sprite = this.otherPlayers[playerId];
+                            sprite.setPosition(playerData.x, playerData.y).setRotation(playerData.rotation).setData('health', playerData.health);
+                            if (playerData.health > 0 && !sprite.active) sprite.setActive(true).setVisible(true);
+                        }
+                    });
+                     // Clean up disconnected players
+                    for (const id in this.otherPlayers) {
+                        if (!activePlayerIds.has(id)) {
+                            this.otherPlayers[id].destroy();
+                            delete this.otherPlayers[id];
+                        }
+                    }
+                    
+                    // Recalculate scores based on all current players
+                    if (this.player.active) teamCounts[this.player.getData('team')]++;
+                    Object.values(this.otherPlayers).forEach(p => {
+                        if (p.active) teamCounts[p.getData('team')]++;
+                    });
+                    
+                    document.getElementById('blue-score').textContent = `تیم آبی: ${teamCounts.blue}`;
+                    document.getElementById('red-score').textContent = `تیم قرمز: ${teamCounts.red}`;
+
+                    if ((teamCounts.blue === 0 || teamCounts.red === 0) && activePlayerIds.size > 1) {
+                        this.endGame(teamCounts.red > 0 ? 'قرمز' : 'آبی');
+                    }
+                }, (error) => {
+                    console.error("Error in game listener:", error);
+                    showToast(`خطای همگام‌سازی بازی: ${error.message}`);
+                });
+            }
+            
+            updatePlayerStateInFirestore() {
+                if (!this.player.body) return;
+                const playerState = {
+                    x: this.player.x, y: this.player.y, rotation: this.player.rotation,
+                    health: this.player.getData('health'), team: playerTeam, lastUpdate: serverTimestamp()
+                };
+                setDoc(doc(db, "artifacts", appId, "public", "data", "games", currentGameId, "players", currentPlayerId), playerState, { merge: true });
+            }
+
+            endGame(winningTeam) {
+                if (unsubscribeGameListener) {
+                    unsubscribeGameListener();
+                    unsubscribeGameListener = null;
+                }
+                this.physics.pause();
+                showToast(`بازی تمام شد! تیم ${winningTeam} برنده شد.`);
+                this.time.delayedCall(5000, () => window.location.reload());
+            }
+        }
+        
+        // --- Main Initialization ---
+        async function main() {
+             try {
+                setLogLevel('debug');
+                if (!firebaseConfigString) throw new Error("پیکربندی Firebase یافت نشد.");
+                const firebaseConfig = JSON.parse(firebaseConfigString);
+                if (!firebaseConfig.apiKey) throw new Error("کلید API در پیکربندی Firebase وجود ندارد.");
+                
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                
+                setupAuthListener();
+                await signInUser();
+            } catch (error) {
+                console.error("Initialization failed:", error);
+                userIdDisplay.textContent = `خطا: ${error.message}`;
+                userIdDisplay.classList.add('text-red-400');
+                startGameBtn.textContent = "خطا در اتصال";
+                startGameBtn.disabled = true;
+            }
+        }
+        
+        main();
+    </script>
+
 </body>
 </html>
