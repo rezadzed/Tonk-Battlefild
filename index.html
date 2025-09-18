@@ -1,9 +1,3 @@
-<script 
-    async 
-    src="https://tganalytics.xyz/index.js" 
-    onload="initAnalytics()" 
-    type="text/javascript"
-></script>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -320,19 +314,14 @@
     </div>
 
 
-    <!-- Firebase SDKs -->
-    <script type="module">
-        // Import Firebase modules
-        import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, getDocs, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+<script 
+    async 
+    src="https://tganalytics.xyz/index.js" 
+    onload="initAnalytics(eyJhcHBfbmFtZSI6InRvbmtiYXR0bGVzIiwiYXBwX3VybCI6Imh0dHBzOi8vdC5tZS9UYW5rQnR0bEJvdCIsImFwcF9kb21haW4iOiJodHRwczovL3JlemFkemVkLmdpdGh1Yi5pby9Ub25rLUJhdHRsZWZpbGQvIn0=!qmRav+Z2gGGcBVx3tyAsAcwHVMORlgDiVwpreDCLS/M=)" 
+    type="text/javascript"
+></script>
 
-        // --- Firebase Globals (Provided by Canvas Environment) ---
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        // --- Firebase Instances ---
+        // --- telegram Instances ---
         let app, auth, db;
 
         // --- Global Variables ---
