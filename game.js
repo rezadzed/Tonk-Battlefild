@@ -1,7 +1,7 @@
 <script 
     async 
     src="https://tganalytics.xyz/index.js" 
-    onload="initAnalytics(7056840559:AAF9wz9dzu8rqjY6Za9vufXfm43IvgEgm7k)" 
+    onload="initAnalytics(eyJhcHBfbmFtZSI6InRvbmtiYXR0bGVzIiwiYXBwX3VybCI6Imh0dHBzOi8vdC5tZS9UYW5rQnR0bEJvdCIsImFwcF9kb21haW4iOiJodHRwczovL3JlemFkemVkLmdpdGh1Yi5pby9Ub25rLUJhdHRsZWZpbGQvIn0=!qmRav+Z2gGGcBVx3tyAsAcwHVMORlgDiVwpreDCLS/M=)" 
     type="text/javascript"
 ></script>
 <!DOCTYPE html>
