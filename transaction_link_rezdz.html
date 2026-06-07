@@ -1,0 +1,88 @@
+
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ساخت سریع لینک تراکنش - RezDz.co</title>
+  <style>
+    body {
+      font-family: "Vazirmatn", sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 500px;
+      margin: auto;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    input, button {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #result, #qrcode {
+      margin-top: 20px;
+    }
+    footer {
+      margin-top: 40px;
+      font-size: 0.9em;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ساخت سریع لینک تراکنش</h1>
+    <h3>RezDz.co</h3>
+    <input type="text" id="address" placeholder="آدرس کیف پول">
+    <input type="number" step="0.000000001" id="amount" placeholder="مقدار (TON)">
+    <input type="text" id="text" placeholder="پیام اختیاری">
+    <button onclick="generateLink()">تولید لینک و QR</button>
+
+    <div id="result"></div>
+    <div id="qrcode"></div>
+  </div>
+
+  <footer>
+    ساخت با عشق توسط RezDz.co
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    function generateLink() {
+      const address = document.getElementById('address').value.trim();
+      const amount = document.getElementById('amount').value.trim();
+      const text = encodeURIComponent(document.getElementById('text').value.trim());
+
+      if (!address || !amount) {
+        alert("لطفاً آدرس کیف پول و مقدار TON را وارد کنید.");
+        return;
+      }
+
+      const nanoAmount = parseFloat(amount) * 1e9;
+      const link = `https://tonkeeper.com/transfer/${address}?amount=${Math.round(nanoAmount)}${text ? `&text=${text}` : ''}`;
+
+      document.getElementById('result').innerHTML = `<p>لینک تولید شده:</p><textarea style='width:90%;height:60px;'>${link}</textarea>`;
+      document.getElementById('qrcode').innerHTML = "";
+      new QRCode(document.getElementById("qrcode"), link);
+    }
+  </script>
+</body>
+</html>
